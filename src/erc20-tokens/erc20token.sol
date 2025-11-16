@@ -11,13 +11,13 @@ contract ERC20 is IERC20 {
     string private _name;
     string private _symbol;
     uint8 private _decimals;
-    address private _owner;
+    address internal _contractOwner;
 
     constructor(string memory name_, string memory symbol_, uint8 decimals_) {
         _name = name_;
         _symbol = symbol_;
         _decimals = decimals_;
-        _owner = msg.sender;
+        _contractOwner = msg.sender;
     }
 
     // Explicit implementations of metadata functions for ERC20 compliance
@@ -37,8 +37,8 @@ contract ERC20 is IERC20 {
     }
 
     function changeOwner(address newOwner) external {
-        require(msg.sender == _owner, "Not authorized");
-        _owner = newOwner;
+        require(msg.sender == _contractOwner, "Not authorized");
+        _contractOwner = newOwner;
     }
 
     
@@ -66,14 +66,16 @@ contract ERC20 is IERC20 {
         returns (bool)
     {
         address spender = msg.sender;
-        _spendAllowance(sender, spender, amount);
         _transfer(sender, recipient, amount);
         return true;
     }
 
     function _spendAllowance(address owner, address spender, uint256 amount) internal {
+        if (owner == spender) {
+            return;// always approved
+        }
         uint256 currentAllowance = allowance[owner][spender];
-        if (currentAllowance != type(uint256).max) {
+        if (currentAllowance < type(uint256).max) {
             require(currentAllowance >= amount, "ERC20: insufficient allowance");
             unchecked {
                 allowance[owner][spender] = currentAllowance - amount;
@@ -141,8 +143,33 @@ contract ERC20 is IERC20 {
         if(from == address(0)) {
             revert ("Invalid sender address");
         }
+        require(balanceOf[from] >= amount, "Insufficient balance");
         // require(msg.sender == _owner || msg.sender == from, "Not authorized");
         _updateState(from, address(0), amount);
+    }
+
+
+    // mint-burn functions are disabled here
+    function mint(address to, uint256 amount) virtual external returns (bool) {
+        // revert ("Not implemented");
+        // require(msg.sender == _contractOwner, "Not authorized");
+        // _mint(to, amount);
+        return true;
+    }
+
+    function burn(address from, uint256 amount) virtual external returns (bool) {
+        // revert ("Not implemented");
+        return true;
+    }
+
+
+    fallback() external payable {
+        
+    }
+
+    receive() external payable {
+        // accept ETH
+        
     }
    
 }

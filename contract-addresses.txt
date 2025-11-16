@@ -1,7 +1,7 @@
 =====run node
 
 load and save on exit
->> anvil --state ./chain.json
+>> anvil --state ./chain.json -vvvvv
 clea
 load only
 >> anvil --fork-url https://reth-ethereum.ithaca.xyz/rpc --state ./chain.json
@@ -43,26 +43,41 @@ Private Keys
 
 
 ----------------------- test account
-domin (DEPLOYER) = 0x33bad609fd656df90fb9da00058c59a54a5d7a6f  / 0x8ee2017a70e17baa86d8c3c376436a08424238783327b97972725ea452312398
+domin (DEPLOYER, octacat) = 0x33bad609fd656df90fb9da00058c59a54a5d7a6f  / 0x8ee2017a70e17baa86d8c3c376436a08424238783327b97972725ea452312398
 
-saf =  0xc871dc8d33ecb29f7debc386f1fde73ec3a31290 /  0xe12c253fcc358e927e93f381c7752bb075fc56e6274be3a56c99565c3f99135b
+saf-test(han) =  0xc871dc8d33ecb29f7debc386f1fde73ec3a31290 /  0xe12c253fcc358e927e93f381c7752bb075fc56e6274be3a56c99565c3f99135b
+
+saf-hacked = 0x7880fa84a54f55a652ed805362427090d9615f77 / 
 
 
+export addrT1=0x33bad609fd656df90fb9da00058c59a54a5d7a6f
+export addrT2=0xc871dc8d33ecb29f7debc386f1fde73ec3a31290
+
+export addrL1=0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+export addrL2=0x70997970C51812dc3A010C7d01b50e0d17dc79C8
+export addrL3=0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC
+export addrHacked=0x7880fa84a54f55a652ed805362427090d9615f77
 
 
+export pkL1=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+export pkL2=0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d
 
-export PRIVATE_KEY=0x8ee2017a70e17baa86d8c3c376436a08424238783327b97972725ea452312398
+export pkT1=0x8ee2017a70e17baa86d8c3c376436a08424238783327b97972725ea452312398          
+export pkT2=0xe12c253fcc358e927e93f381c7752bb075fc56e6274be3a56c99565c3f99135b          
+
+export rpcT=https://sepolia.infura.io/v3/47938b70f41f4e20bbc70d0d42ba89bb
+export rpcL=http://127.0.0.1:8545
 
 export CONTRACT=0x98Ef35d155BE8315fE034aF067A22D4013742Fe2
 
-export RPC=https://sepolia.infura.io/v3/47938b70f41f4e20bbc70d0d42ba89bb
+
 
 ===== deploy
 
-forge script script/TokenFactory.s.sol --rpc-url http://127.0.0.1:8545 --broadcast --private-key $PRIVATE_KEY
+forge script script/TokenFactory.s.sol --rpc-url $rpcT --broadcast --private-key $pkT1
 
 
-forge script script/TokenFactory.s.sol --rpc-url https://sepolia.infura.io/v3/47938b70f41f4e20bbc70d0d42ba89bb --broadcast --private-key $PRIVATE_KEY
+forge script script/TokenFactory.s.sol --rpc-url $rpcL --broadcast --private-key $pkL1
 
 
 
@@ -82,17 +97,21 @@ cast send --private-key $PRIVATE_KEY $CONTRACT "setNumber(uint256)" 12
 cast send --private-key $PRIVATE_KEY $CONTRACT "increment()"
 
 
-======== check balance
+================================================================================ check balance
 cast balance $addr1
 cast balance $addr1 --ether
 
-==== send eth
+================================================================================ send eth
 cast send --private-key $PRIVATE_KEY $addr1 --value 10ether
 
 ==== get transaction receipt
 cast receipt 0xbf4d2ba60d0807167a7396fecdac3597cede6e881f986f7266fcbb98e4f2a22d --json
 
 
+================================================================================ set eth value to address
+cast rpc anvil_setBalance 0xYourTestAddress 0xde0b6b3a7640000
+
 =============== event emit analysis
 
-
+============ API generation
+forge inspect <ContractName> abi

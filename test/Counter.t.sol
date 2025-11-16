@@ -2,13 +2,15 @@
 pragma solidity ^0.8.13;
 
 import {Test} from "../lib/forge-std/src/Test.sol";
-import {SafToken} from "../src/erc20-tokens/SafToken.sol";
+import {SafToken} from "../src/erc20-tokens/saf-token.sol";
 
 contract CounterTest is Test {
     SafToken public safToken;
 
     function setUp() public {
+        vm.startBroadcast();
         safToken = new SafToken("SafToken", "saf", 18, 1000000000000000000);
+        vm.stopBroadcast();
 
     }
 
