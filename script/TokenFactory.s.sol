@@ -15,13 +15,12 @@ contract TokenFactoryScript is Script {
         
         vm.startBroadcast();
 
-        safdToken = new SafToken("SafDToken", "safD", 4, 3_000_000_00); //already deployed
+        safdToken = new SafToken("SafDToken", "safD", 2, 3_000_000_00); //already deployed
         
         safwToken = new SafToken("SafWToken", "safW", 2, 1_000_000_00); //already deployed
-        
-        
-        
-
         vm.stopBroadcast();
+        console.log("-------------- token created ----------");
+        console.log("safdToken", address(safdToken));
+        console.log("safwToken", address(safwToken));
     }
 }

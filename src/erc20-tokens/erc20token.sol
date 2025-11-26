@@ -8,9 +8,9 @@ contract ERC20 is IERC20 {
     mapping(address => uint256) public balanceOf;
     mapping(address => mapping(address => uint256)) public allowance;
     
-    string private _name;
-    string private _symbol;
-    uint8 private _decimals;
+    string internal _name;
+    string internal _symbol;
+    uint8 internal _decimals;
     address internal _contractOwner;
 
     constructor(string memory name_, string memory symbol_, uint8 decimals_) {
@@ -55,7 +55,9 @@ contract ERC20 is IERC20 {
 
     // spender can only spend up to the amount approved, spender is usually pool contract address
     function approve(address spender, uint256 amount) external returns (bool) {
-        allowance[msg.sender][spender] += amount;
+        require(spender != address(0), "invalid spender")
+        
+        allowance[msg.sender][spender] = amount;
         emit Approval(msg.sender, spender, amount);
         return true;
     }
@@ -66,6 +68,7 @@ contract ERC20 is IERC20 {
         returns (bool)
     {
         address spender = msg.sender;
+        _spendAllowance(sender, spender, amount);
         _transfer(sender, recipient, amount);
         return true;
     }

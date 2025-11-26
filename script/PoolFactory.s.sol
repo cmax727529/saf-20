@@ -8,12 +8,10 @@ import {ERC20} from "../src/erc20-tokens/erc20token.sol";
 import {SafSwapV0Pair} from "../src/swappool/saf-swapv0pair.sol";
 
 import {SafToken} from "../src/erc20-tokens/saf-token.sol";
+import {SafProxyContract} from "../src/swappool/saf-proxy-contract.sol";
 
 import { UD60x18, ud, Math,Common } from "../node_modules/@prb/math/src/UD60x18.sol";
 
-function fromUint(uint256 value) returns(UD60x18) {
-    return UD60x18.wrap(value * 1e18);
-}
 
 contract PoolFactoryScript is Script {
     ERC20 public tokenA;
@@ -21,71 +19,37 @@ contract PoolFactoryScript is Script {
     string public poolName;
     
     function setUpNewTokens() public {
-        tokenA = new SafToken("SafDToken", "safD", 2, 3_000_000_00);
-        tokenB = new SafToken("SafWToken", "safW", 2, 1_000_000_00);
+        // tokenA = new SafToken("SafDToken", "safD", 2, 3_000_000_00);
+        // tokenB = new SafToken("SafWToken", "safW", 2, 1_000_000_00);
+
+        tokenA = ERC20(address(0xa82ff9afd8f496c3d6ac40e2a0f282e47488cfc9));
+        tokenB = ERC20(address(0x1613beb3b2c4f22ee086b2b38c1476a3ce7f78e8));
     }
 
-    function test() public {
-        uint256 _amountA = 100;
-        uint256 _amountB = 80;
-        UD60x18 rate = ud(0.85e18);
 
-        UD60x18 poolA = ud(0);
-        uint256 totalSupply = 0;
-        UD60x18 poolB;
-        UD60x18 newLpTokenSupply ;
-        
-        UD60x18 pairedAAmount = ud(_amountB).mul(rate);
-        if(_amountA > pairedAAmount.unwrap()) {
-            _amountA = pairedAAmount.unwrap();
-        }else{
-            _amountB = ud(_amountA).div(rate).unwrap();
-        }
-
-        //update pool reserves
-        poolA = poolA.add(ud(_amountA));
-        poolB = poolB.add(ud(_amountB));
-
-    
-        if(true || totalSupply == 0) {
-            newLpTokenSupply = ud(1).div(ud(1));
-        } else {
-            // newtokensupply = min(amountA * lpTokenTotalSupply / poolA, amountB * lpTokenTotalSupply / poolB)
-            // newLpTokenSupply = _min(ud(_amountA).mul(ud(totalSupply)).div(poolA), ud(_amountB).mul(ud(totalSupply)).div(poolB));
-        }
-        UD60x18 one = ud(1e18);
-        UD60x18 two = ud(1e18);
-
-        uint256 result =Common.sqrt(100* 200);
-        UD60x18 result2 = Math.sqrt(ud(10000e18));
-        
-        console.log(result);
-        console.log(result2.unwrap()/1e18);
-        
-    }
     function run() public {
-        // test();
-        // return;
 
         vm.startBroadcast();
         setUpNewTokens();
-        SafSwapV0Pair swapPool = new SafSwapV0Pair("SwapPool-A2B", "lpA2B", 18, address(tokenA), address(tokenB), 0.01e18 ); // 1% swap fee
+        SafSwapV0Pair swapPool = new SafSwapV0Pair(); // 1% swap fee
+        SafProxyContract poolProxy = new SafProxyContract(payable(swapPool), msg.sender);
+        SafSwapV0Pair  swapProxy= SafSwapV0Pair(payable(poolProxy));
+        swapProxy.initialize("SwapPool-A2B", "lpA2B", 0, address(tokenA), address(tokenB), 0.01e18 );
+
         vm.stopBroadcast();
 
         console.log("tokenA deployed at", address(tokenA));
         console.log("tokenB deployed at", address(tokenB));
-        console.log("SafSwapV0Pair deployed at", address(swapPool));
+        console.log("SafSwapV0Pair deployed at", address(poolProxy));
         console.log('-------------- bash helper script ----------');
         console.log(string.concat('export tokenA=', addrToHexString(address(tokenA))));
         console.log(string.concat('export tokenB=', addrToHexString(address(tokenB))));
-        console.log(string.concat('export pool=', addrToHexString(address(swapPool))));
+        console.log(string.concat('export pool=', addrToHexString(address(poolProxy))));
         console.log('-------------- js helper script ----------');
         console.log(string.concat("export const tokenA='", addrToHexString(address(tokenA)), "'"));
         console.log(string.concat("export const tokenB='", addrToHexString(address(tokenB)), "'"));
-        console.log(string.concat("export const poolSwap='", addrToHexString(address(swapPool)), "'"));
+        console.log(string.concat("export const pool='", addrToHexString(address(poolProxy)), "'"));
         console.log('--------------  ----------');
-
-        
     }
 
     function addrToHexString(address account) internal pure returns (string memory) {

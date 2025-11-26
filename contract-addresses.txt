@@ -74,10 +74,10 @@ export CONTRACT=0x98Ef35d155BE8315fE034aF067A22D4013742Fe2
 
 ===== deploy
 
-forge script script/TokenFactory.s.sol --rpc-url $rpcT --broadcast --private-key $pkT1
+forge script script/PoolFactory.s.sol --rpc-url $rpcT --broadcast --private-key $pkT1
 
 
-forge script script/TokenFactory.s.sol --rpc-url $rpcL --broadcast --private-key $pkL1
+forge script script/PoolFactory.s.sol --rpc-url $rpcL --broadcast --private-key $pkL1
 
 
 
@@ -114,4 +114,4 @@ cast rpc anvil_setBalance 0xYourTestAddress 0xde0b6b3a7640000
 =============== event emit analysis
 
 ============ API generation
-forge inspect <ContractName> abi
+forge inspect <ContractName> abi --json
