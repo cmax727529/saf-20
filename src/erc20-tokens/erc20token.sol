@@ -55,7 +55,7 @@ contract ERC20 is IERC20 {
 
     // spender can only spend up to the amount approved, spender is usually pool contract address
     function approve(address spender, uint256 amount) external returns (bool) {
-        require(spender != address(0), "invalid spender")
+        require(spender != address(0), "invalid spender");
         
         allowance[msg.sender][spender] = amount;
         emit Approval(msg.sender, spender, amount);
@@ -160,7 +160,12 @@ contract ERC20 is IERC20 {
         return true;
     }
 
-    function burn(address from, uint256 amount) virtual external returns (bool) {
+    function burn(uint256 amount) virtual external returns (bool) {
+        // revert ("Not implemented");
+        return true;
+    }
+
+    function burnFrom(address from, uint256 amount) virtual external returns (bool) {
         // revert ("Not implemented");
         return true;
     }

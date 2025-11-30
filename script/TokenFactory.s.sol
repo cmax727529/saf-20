@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 import {Script} from "../lib/forge-std/src/Script.sol";
 import {ERC20} from "../src/erc20-tokens/erc20token.sol";
 import {SafToken} from "../src/erc20-tokens/saf-token.sol";
-
+import {console} from "../lib/forge-std/src/console.sol";
 
 contract TokenFactoryScript is Script {
     ERC20 public safdToken;
@@ -15,9 +15,9 @@ contract TokenFactoryScript is Script {
         
         vm.startBroadcast();
 
-        safdToken = new SafToken("SafDToken", "safD", 2, 3_000_000_00); //already deployed
+        safdToken = new SafToken("SafDToken", "safD", 2, 1_000_00); //already deployed
         
-        safwToken = new SafToken("SafWToken", "safW", 2, 1_000_000_00); //already deployed
+        safwToken = new SafToken("SafWToken", "safW", 2, 2_000_00); //already deployed
         vm.stopBroadcast();
         console.log("-------------- token created ----------");
         console.log("safdToken", address(safdToken));

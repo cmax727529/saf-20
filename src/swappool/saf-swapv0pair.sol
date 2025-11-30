@@ -20,32 +20,37 @@ How to swap tokens
 
 contract SafSwapV0Pair is ERC20 {
     
+    IERC20 internal tokenA; //baseToken
+    IERC20 internal tokenB; //paredToken
+    uint256 internal constant _scale = 1e18;
+// swap fee is 1%
+    UD60x18 public swapFee ; // 1%
+    
+    uint256 public poolA;
+    uint256 public poolB;
+
+    uint8 decimalsA;
+    uint8 decimalsB;
+
+    event DepositPair(address indexed owner, uint256 amountA, uint256 amountB);
+    event WithdrawLp(address indexed owner, uint256 lpAmount, uint256 amountA, uint256 amountB);
     event Swap(address indexed owner, 
         address indexed tokenIn,
         address indexed tokenOut,
         uint256 amountIn,
         uint256 amountOut,
-        uint256 rate);
+        UD60x18 rate);
 
-    
-    IERC20 internal tokenA; //baseToken
-    IERC20 internal tokenB; //paredToken
-    uint256 internal constant _scale = 1e18;
 
-    // A = exchangeRate * B
-    function exchangeRate () public pure returns(UD60x18) {
+    // A * exchangeRate = B * 10 ** (decimalsB - decimalsA)
+    function exchangeRate () public view returns(UD60x18) {
         // return fixed
-        return ud(0.85e18); // 0.85 * 1e18, A * exchangeRate = B
+        if(poolA == 0 && poolB == 0) {
+            return ud(0);
+        }
+        return ud(_scale * poolB * 10 ** (decimalsB - decimalsA) / poolA); // A * exchangeRate = B * 10 ** (decimalsB - decimalsA)
     }
-    // swap fee is 1%
-    uint256 public swapFee ; // 1%
     
-
-    mapping(address => UD60x18) public lpPositions; //track lp balances
-
-    uint256 public poolA;
-    uint256 public poolB;
-
     constructor(
         
     )  ERC20("_", "_", 0) {
@@ -58,7 +63,7 @@ contract SafSwapV0Pair is ERC20 {
         uint8 decimals_,
         address _tokenA,
         address _tokenB,
-        uint256 _swapFee // 1%
+        UD60x18 _swapFee // 1%
         ) external {
         
         if(address(tokenA) != address(0)) {
@@ -71,11 +76,18 @@ contract SafSwapV0Pair is ERC20 {
         
         tokenA = IERC20(_tokenA);
         tokenB = IERC20(_tokenB);
-        swapFee = _swapFee < 0.005e18 ? _swapFee : 0.01e18; 
-        require(swapFee >= 0.01e18, "Swap fee must be less than 1%");
+        decimalsA = tokenA.decimals();
+        decimalsB = tokenB.decimals();
+        swapFee = _swapFee;
+        
         require(address(tokenA) != address(0) && address(tokenB) != address(0), "Invalid token addresses");
         
-        require(swapFee >= 0.01e18, "Swap fee must be less than 1%");
+        
+    }
+
+    function setSwapFee(UD60x18 _swapFee) external {
+        require(msg.sender == _contractOwner, "Not authorized");
+        swapFee = _swapFee;
     }
     // =========================== pool functions ===========================
     // only deposit pair tokens under the rate of exchangeRate
@@ -91,17 +103,16 @@ contract SafSwapV0Pair is ERC20 {
             _amountB = ud(_amountA).mul(exchangeRate()).unwrap();
         }
 
-        //update pool reserves
-        poolA += _amountA;
-        poolB += _amountB;
-
+        
         if(totalSupply == 0) {
             newLpTokenSupply = Common.sqrt(_amountA * _amountB);
         } else {
             // newtokensupply = min(amountA * lpTokenTotalSupply / poolA, amountB * lpTokenTotalSupply / poolB)
             newLpTokenSupply = _min(ud(_amountA).mul(ud(totalSupply*_scale/poolA)), ud(_amountB).mul(ud(totalSupply*_scale/poolB))).unwrap();
         }
-        
+        //update pool reserves
+        poolA += _amountA;
+        poolB += _amountB;
         
         _mint(msg.sender, newLpTokenSupply);
       
@@ -112,7 +123,7 @@ contract SafSwapV0Pair is ERC20 {
 
 
 
-    function withdrawLp(uint256 _lpAmount) external {
+    function withdrawLp(uint256 _lpAmount) external returns (uint256, uint256) {
                 
         require(_lpAmount > 0, "LP amount must be greater than 0");
         require(balanceOf[msg.sender] >= _lpAmount, "Insufficient LP position");
@@ -127,12 +138,14 @@ contract SafSwapV0Pair is ERC20 {
         _safeTransferFrom(tokenA, address(this), msg.sender, _withdrawlAmtA);
         _safeTransferFrom(tokenB, address(this), msg.sender, _withdrawlAmtB);
         
+        return (_withdrawlAmtA, _withdrawlAmtB);
     }
 
     //========================== swap functions ===========================
     // swap function
     function _swap(IERC20 tokenIn, uint256 _amountIn, IERC20 tokenOut, uint256 _amountOut) internal returns(bool){
         require(_amountIn > 0 && _amountOut > 0, "Amounts must be greater than 0");
+        UD60x18 _preRate = exchangeRate();
         if(tokenIn == tokenA) { // A => B
             require(poolB >= _amountOut, "Insufficient pool balance");
             poolA += _amountIn;
@@ -151,7 +164,7 @@ contract SafSwapV0Pair is ERC20 {
         //update pool reserves
 
 
-        emit Swap(msg.sender, address(tokenIn), address(tokenOut), _amountIn, _amountOut, exchangeRate().unwrap());
+        emit Swap(msg.sender, address(tokenIn), address(tokenOut), _amountIn, _amountOut, _preRate);
 
         return true;    
     }
@@ -163,9 +176,9 @@ contract SafSwapV0Pair is ERC20 {
         IERC20 outputToken = inputToken == tokenA ? tokenB : tokenA;
         
         if(inputToken == tokenA) {
-            _amountOut = ud(_amountIn).mul(rate).mul(ud(1e18 - swapFee)).unwrap();
+            _amountOut = ud(_amountIn).mul(rate).mul(ud(1e18) - swapFee).unwrap();
         } else {
-            _amountOut = ud(_amountIn).div(rate).mul(ud(1e18 - swapFee)).unwrap();
+            _amountOut = ud(_amountIn).div(rate).mul(ud(1e18) - swapFee).unwrap();
         }
         
         require(_swap(inputToken, _amountIn, outputToken, _amountOut), "Swap failed");

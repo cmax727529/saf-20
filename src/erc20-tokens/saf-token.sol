@@ -30,7 +30,13 @@ contract SafToken is ERC20, IERC165 {
     }
 
     // burn possible
-    function burn(address from, uint256 amount) external override returns (bool) {
+    function burn(uint256 amount) external override returns (bool) {
+        _burn(msg.sender, amount);
+        return true;
+    }
+
+    function burnFrom(address from, uint256 amount) external override returns (bool) {
+        _spendAllowance(from, msg.sender, amount);
         _burn(from, amount);
         return true;
     }

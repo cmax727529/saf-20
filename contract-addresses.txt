@@ -68,7 +68,7 @@ export pkT2=0xe12c253fcc358e927e93f381c7752bb075fc56e6274be3a56c99565c3f99135b
 export rpcT=https://sepolia.infura.io/v3/47938b70f41f4e20bbc70d0d42ba89bb
 export rpcL=http://127.0.0.1:8545
 
-export CONTRACT=0x98Ef35d155BE8315fE034aF067A22D4013742Fe2
+export CONTRACT=0xcbEAF3BDe82155F56486Fb5a1072cb8baAf547cc
 
 
 
@@ -82,8 +82,8 @@ forge script script/PoolFactory.s.sol --rpc-url $rpcL --broadcast --private-key 
 
 
 --- contract created
-  >>  0x98Ef35d155BE8315fE034aF067A22D4013742Fe2 ------------ SafDToken  (safD - saf dollar)
-  >>  0xBE092AB6b4743C193e53204Eb1E169BDB0B804Ff ------------ SafWToken  (safW - saf won)
+  >>  0x7bc06c482DEAd17c0e297aFbC32f6e63d3846650 ------------ SafDToken  (safD - saf dollar)
+  >>  0xc351628EB244ec633d5f21fBD6621e1a683B1181 ------------ SafWToken  (safW - saf won)
 
 ======= call (read)
 

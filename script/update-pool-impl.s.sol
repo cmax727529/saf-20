@@ -23,10 +23,9 @@ contract RecreatePoolImplScript is Script {
     
         // string memory tokenA = vm.envString("tokenA");
         // string memory tokenB = vm.envString("tokenB");
-        address tokenAAddr = address(0xa82fF9aFd8f496c3d6ac40E2a0F282E47488CFc9);
-        address tokenBAddr = address(0x1613beB3B2C4f22Ee086B2b38C1476A3cE7f78E8);
-
-        address payable proxyAddr = payable(address(0xf5059a5D33d5853360D16C683c16e67980206f36));
+        
+                       
+        address payable proxyAddr = payable(address(0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9));
         vm.startBroadcast();
         
         SafSwapV0Pair swapPool = new SafSwapV0Pair(); // 1% swap fee
@@ -34,8 +33,6 @@ contract RecreatePoolImplScript is Script {
         poolProxy.upgradeTo(address(swapPool));
         vm.stopBroadcast();
 
-        console.log("tokenA", tokenAAddr);
-        console.log("tokenB", tokenBAddr);
         console.log("upgraded SafSwapV0Pair deployed at", address(swapPool));
         console.log('-------------- bash helper script ----------');
         console.log(string.concat('export poolSwap=', addrToHexString(address(swapPool))));
