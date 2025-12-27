@@ -1,7 +1,7 @@
 {
   "dependencies": {
     "@prb/math": "^4.1.0",
-    "@tailwindcss/postcss": "^4.1.17",
-    "ethers": "^6.15.0"
+    "ethers": "^6.15.0",
+    "openzeppelin": "^1.0.0"
   }
 }

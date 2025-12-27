@@ -24,7 +24,7 @@ contract SafSwapV0Pair is ERC20 {
     IERC20 internal tokenB; //paredToken
     uint256 internal constant _scale = 1e18;
 // swap fee is 1%
-    UD60x18 public swapFee ; // 1%
+    UD60x18 public swapFee ; // 0.3%
     
     uint256 public poolA;
     uint256 public poolB;
@@ -38,8 +38,8 @@ contract SafSwapV0Pair is ERC20 {
         address indexed tokenIn,
         address indexed tokenOut,
         uint256 amountIn,
-        uint256 amountOut,
-        UD60x18 rate);
+        uint256 amountOut
+        );
 
 
     // A * exchangeRate = B * 10 ** (decimalsB - decimalsA)
@@ -63,7 +63,7 @@ contract SafSwapV0Pair is ERC20 {
         uint8 decimals_,
         address _tokenA,
         address _tokenB,
-        UD60x18 _swapFee // 1%
+        UD60x18 _swapFee // 0.3%
         ) external {
         
         if(address(tokenA) != address(0)) {
@@ -95,12 +95,16 @@ contract SafSwapV0Pair is ERC20 {
         require(_amountA > 0 && _amountB > 0, "Amounts must be greater than 0");
 
         uint256 newLpTokenSupply=0;
-        
-        UD60x18 pairedAAmount = ud(_amountB).div(exchangeRate());
-        if(_amountA > pairedAAmount.unwrap()) {
-            _amountA = pairedAAmount.unwrap();
-        }else{
-            _amountB = ud(_amountA).mul(exchangeRate()).unwrap();
+        if(exchangeRate().unwrap() == 0) {
+            //first deposit
+            newLpTokenSupply = Common.sqrt(_amountA * _amountB);
+        } else {
+            UD60x18 pairedAAmount = ud(_amountB).div(exchangeRate());
+            if(_amountA > pairedAAmount.unwrap()) {
+                _amountA = pairedAAmount.unwrap();
+            }else{
+                _amountB = ud(_amountA).mul(exchangeRate()).unwrap();
+            }
         }
 
         
@@ -145,8 +149,8 @@ contract SafSwapV0Pair is ERC20 {
     // swap function
     function _swap(IERC20 tokenIn, uint256 _amountIn, IERC20 tokenOut, uint256 _amountOut) internal returns(bool){
         require(_amountIn > 0 && _amountOut > 0, "Amounts must be greater than 0");
-        UD60x18 _preRate = exchangeRate();
-        if(tokenIn == tokenA) { // A => B
+        
+        if(address(tokenIn) == address(tokenA)) { // A => B
             require(poolB >= _amountOut, "Insufficient pool balance");
             poolA += _amountIn;
             poolB -= _amountOut;
@@ -164,25 +168,48 @@ contract SafSwapV0Pair is ERC20 {
         //update pool reserves
 
 
-        emit Swap(msg.sender, address(tokenIn), address(tokenOut), _amountIn, _amountOut, _preRate);
+        emit Swap(msg.sender, address(tokenIn), address(tokenOut), _amountIn, _amountOut );
 
         return true;    
     }
 
     // sell inputToken, buy outputToken
     function swapToken(ERC20 inputToken, uint256 _amountIn) external returns (uint256, uint256){
-        UD60x18 rate = exchangeRate();
-        uint256 _amountOut = 0;
-        IERC20 outputToken = inputToken == tokenA ? tokenB : tokenA;
         
-        if(inputToken == tokenA) {
-            _amountOut = ud(_amountIn).mul(rate).mul(ud(1e18) - swapFee).unwrap();
-        } else {
-            _amountOut = ud(_amountIn).div(rate).mul(ud(1e18) - swapFee).unwrap();
-        }
-        
-        require(_swap(inputToken, _amountIn, outputToken, _amountOut), "Swap failed");
+        (uint256 _amountOut, address _outputToken) = getAmountToBuy(inputToken, _amountIn);
+        require(_swap(inputToken, _amountIn, IERC20(_outputToken), _amountOut), "Swap failed");
         return (_amountIn, _amountOut);
+    }
+
+    // return amount of tokens you can buy for the amount of sellToken 
+    function getAmountToBuy(ERC20 sellToken, uint256 _amountSell) public view returns (uint256, address){
+        uint256 _amountBuy = 0;
+        IERC20 buyToken = address(sellToken) == address(tokenA) ? tokenB : tokenA;
+        UD60x18 x0 = address(sellToken) == address(tokenA) ? ud(poolA*_scale) : ud(poolB*_scale);
+        UD60x18 y0 = address(sellToken) == address(tokenA) ? ud(poolB*_scale) : ud(poolA*_scale);
+        UD60x18 dx_eff = ud(_amountSell*_scale) * (ud(1e18) - swapFee);
+        
+        UD60x18 dy = (dx_eff * y0) / (x0 + dx_eff);
+
+        _amountBuy = dy.unwrap() / _scale;
+        return (_amountBuy, address(buyToken));
+    }
+
+    // return amount of tokens needed to sell for the amount you want to buy
+    function getAmountToSell(ERC20 buyToken, uint256 _amountBuy) public view returns (uint256, address){
+        uint256 _amountSell = 0;
+        IERC20 sellToken = address(buyToken) == address(tokenA) ? tokenB : tokenA;
+        UD60x18 x0 = address(buyToken) == address(tokenA) ? ud(poolA*_scale) : ud(poolB*_scale);
+        UD60x18 y0 = address(buyToken) == address(tokenA) ? ud(poolB*_scale) : ud(poolA*_scale);
+        
+
+        UD60x18 dy = ud(_amountBuy*_scale);
+        UD60x18 dx_eff = dy * x0 /(y0 - dy);
+        
+        UD60x18 dx = dx_eff / (ud(1e18) - swapFee);
+
+        _amountSell = dx.unwrap() / _scale;
+        return (_amountSell, address(sellToken));
     }
 
     // dummy comment 

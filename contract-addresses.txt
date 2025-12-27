@@ -66,7 +66,15 @@ export pkT1=0x8ee2017a70e17baa86d8c3c376436a08424238783327b97972725ea452312398
 export pkT2=0xe12c253fcc358e927e93f381c7752bb075fc56e6274be3a56c99565c3f99135b          
 
 export rpcT=https://sepolia.infura.io/v3/47938b70f41f4e20bbc70d0d42ba89bb
+export rpcBase=https://base-mainnet.infura.io/v3/47938b70f41f4e20bbc70d0d42ba89bb
+export rpcMain=https://mainnet.infura.io/v3/47938b70f41f4e20bbc70d0d42ba89bb
+export rpcPolygon=https://polygon-mainnet.infura.io/v3/47938b70f41f4e20bbc70d0d42ba89bb
+export rpcArbi=https://arbitrum-mainnet.infura.io/v3/47938b70f41f4e20bbc70d0d42ba89bb
+export rpcBsc=https://bsc-mainnet.infura.io/v3/47938b70f41f4e20bbc70d0d42ba89bb
+
 export rpcL=http://127.0.0.1:8545
+
+export rpcTempo=https://rpc.testnet.tempo.xyz
 
 export CONTRACT=0xcbEAF3BDe82155F56486Fb5a1072cb8baAf547cc
 
@@ -74,10 +82,10 @@ export CONTRACT=0xcbEAF3BDe82155F56486Fb5a1072cb8baAf547cc
 
 ===== deploy
 
-forge script script/PoolFactory.s.sol --rpc-url $rpcT --broadcast --private-key $pkT1
+forge script script/SwapPoolProxy.s.sol --rpc-url $rpcT --broadcast --private-key $pkT1
 
 
-forge script script/PoolFactory.s.sol --rpc-url $rpcL --broadcast --private-key $pkL1
+forge script script/SwapPoolProxy.s.sol --rpc-url $rpcL --broadcast --private-key $pkL1
 
 
 
@@ -115,3 +123,30 @@ cast rpc anvil_setBalance 0xYourTestAddress 0xde0b6b3a7640000
 
 ============ API generation
 forge inspect <ContractName> abi --json
+
+
+================== base deployment
+deployer = $pkT1
+export tokenA=0xfef3f16f383db3d77f99429404ca506ef2d1a812
+  export tokenB=0x1d5575d5599926209be199218d8cb4d966c87256
+  export pool=0xfbc3668ee0719777b4944cffac36273c0e0c88de
+
+================== eth-sepolia deployment
+deployer = $pkT1
+  export tokenA=0xfe4e1361ab1684ca2ef49c2e2fe4e54374f0d3e9
+  export tokenB=0x0ecdb83ab2fe8333e2a1dbc85355285ad7fad74c
+  export pool=0x4f86ce008e0436151a2293026f608ffbaba90ac0
+
+============= deploy /verify contract with
+forge verify-contract \
+  --chain sepolia \
+  --etherscan-api-key $ETHERSCAN_API_KEY \
+  <DEPLOYED_ADDRESS> \
+  src/MyContract.sol:MyContract
+
+
+  forge verify-contract \
+  --chain sepolia \
+  --etherscan-api-key "TS7SAVWYKPTBPRKHJ3DHHSSN18WHX3GZQV" \
+  0x142A26e58d12Edfa3e726f7C00bCEFF8BBe5A741 \
+  src/vault/SafeVault.sol
