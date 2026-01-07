@@ -3,7 +3,7 @@ pragma solidity ^0.8.26;
 
 import {ERC20} from "../erc20-tokens/erc20token.sol";
 import {IERC20} from "../erc20-interface/erc20interface.sol";
-import { UD60x18, ud, Math,Common } from "../../node_modules/@prb/math/src/UD60x18.sol";
+import { UD60x18, ud, Common } from "../../node_modules/@prb/math/src/UD60x18.sol";
 
 /*
 How to swap tokens
@@ -22,7 +22,7 @@ contract SafSwapV0Pair is ERC20 {
     
     IERC20 internal tokenA; //baseToken
     IERC20 internal tokenB; //paredToken
-    uint256 internal constant _scale = 1e18;
+    uint256 internal constant SCALE_MATH = 1e18;
 // swap fee is 1%
     UD60x18 public swapFee ; // 0.3%
     
@@ -48,7 +48,7 @@ contract SafSwapV0Pair is ERC20 {
         if(poolA == 0 && poolB == 0) {
             return ud(0);
         }
-        return ud(_scale * poolB * 10 ** (decimalsB - decimalsA) / poolA); // A * exchangeRate = B * 10 ** (decimalsB - decimalsA)
+        return ud(SCALE_MATH * poolB * 10 ** (decimalsB - decimalsA) / poolA); // A * exchangeRate = B * 10 ** (decimalsB - decimalsA)
     }
     
     constructor(
@@ -112,7 +112,7 @@ contract SafSwapV0Pair is ERC20 {
             newLpTokenSupply = Common.sqrt(_amountA * _amountB);
         } else {
             // newtokensupply = min(amountA * lpTokenTotalSupply / poolA, amountB * lpTokenTotalSupply / poolB)
-            newLpTokenSupply = _min(ud(_amountA).mul(ud(totalSupply*_scale/poolA)), ud(_amountB).mul(ud(totalSupply*_scale/poolB))).unwrap();
+            newLpTokenSupply = _min(ud(_amountA).mul(ud(totalSupply*SCALE_MATH/poolA)), ud(_amountB).mul(ud(totalSupply*SCALE_MATH/poolB))).unwrap();
         }
         //update pool reserves
         poolA += _amountA;
@@ -185,13 +185,13 @@ contract SafSwapV0Pair is ERC20 {
     function getAmountToBuy(ERC20 sellToken, uint256 _amountSell) public view returns (uint256, address){
         uint256 _amountBuy = 0;
         IERC20 buyToken = address(sellToken) == address(tokenA) ? tokenB : tokenA;
-        UD60x18 x0 = address(sellToken) == address(tokenA) ? ud(poolA*_scale) : ud(poolB*_scale);
-        UD60x18 y0 = address(sellToken) == address(tokenA) ? ud(poolB*_scale) : ud(poolA*_scale);
-        UD60x18 dx_eff = ud(_amountSell*_scale) * (ud(1e18) - swapFee);
+        UD60x18 x0 = address(sellToken) == address(tokenA) ? ud(poolA*SCALE_MATH) : ud(poolB*SCALE_MATH);
+        UD60x18 y0 = address(sellToken) == address(tokenA) ? ud(poolB*SCALE_MATH) : ud(poolA*SCALE_MATH);
+        UD60x18 dxEff = ud(_amountSell*SCALE_MATH) * (ud(1e18) - swapFee);
         
-        UD60x18 dy = (dx_eff * y0) / (x0 + dx_eff);
+        UD60x18 dy = (dxEff * y0) / (x0 + dxEff);
 
-        _amountBuy = dy.unwrap() / _scale;
+        _amountBuy = dy.unwrap() / SCALE_MATH;
         return (_amountBuy, address(buyToken));
     }
 
@@ -199,16 +199,16 @@ contract SafSwapV0Pair is ERC20 {
     function getAmountToSell(ERC20 buyToken, uint256 _amountBuy) public view returns (uint256, address){
         uint256 _amountSell = 0;
         IERC20 sellToken = address(buyToken) == address(tokenA) ? tokenB : tokenA;
-        UD60x18 x0 = address(buyToken) == address(tokenA) ? ud(poolA*_scale) : ud(poolB*_scale);
-        UD60x18 y0 = address(buyToken) == address(tokenA) ? ud(poolB*_scale) : ud(poolA*_scale);
+        UD60x18 x0 = address(buyToken) == address(tokenA) ? ud(poolA*SCALE_MATH) : ud(poolB*SCALE_MATH);
+        UD60x18 y0 = address(buyToken) == address(tokenA) ? ud(poolB*SCALE_MATH) : ud(poolA*SCALE_MATH);
         
 
-        UD60x18 dy = ud(_amountBuy*_scale);
-        UD60x18 dx_eff = dy * x0 /(y0 - dy);
+        UD60x18 dy = ud(_amountBuy*SCALE_MATH);
+        UD60x18 dxEff = dy * x0 /(y0 - dy);
         
-        UD60x18 dx = dx_eff / (ud(1e18) - swapFee);
+        UD60x18 dx = dxEff / (ud(1e18) - swapFee);
 
-        _amountSell = dx.unwrap() / _scale;
+        _amountSell = dx.unwrap() / SCALE_MATH;
         return (_amountSell, address(sellToken));
     }
 

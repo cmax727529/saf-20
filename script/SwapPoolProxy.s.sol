@@ -8,9 +8,9 @@ import {ERC20} from "../src/erc20-tokens/erc20token.sol";
 import {SafSwapV0Pair} from "../src/swappool/saf-swapv0pair.sol";
 
 import {SafToken} from "../src/erc20-tokens/saf-token.sol";
-import {SafProxyContract} from "../src/swappool/saf-proxy-contract.sol";
+import {SafProxyContract} from "../src/utils/saf-proxy-contract.sol";
 
-import { UD60x18, ud, Math,Common } from "../node_modules/@prb/math/src/UD60x18.sol";
+import { UD60x18, ud } from "../node_modules/@prb/math/src/UD60x18.sol";
 
 
 contract SwapPoolProxyScript is Script {

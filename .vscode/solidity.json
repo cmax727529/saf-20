@@ -1,0 +1,8 @@
+{
+    "includePath": [
+      "lib"
+    ],
+    "remappings": [
+      "@openzeppelin/=lib/openzeppelin-contracts/"
+    ]
+  }

@@ -7,10 +7,9 @@ import {console} from "../lib/forge-std/src/console.sol";
 import {ERC20} from "../src/erc20-tokens/erc20token.sol";
 import {SafSwapV0Pair} from "../src/swappool/saf-swapv0pair.sol";
 
-import {SafToken} from "../src/erc20-tokens/saf-token.sol";
 import {SafProxyContract} from "../src/swappool/saf-proxy-contract.sol";
 
-import { UD60x18, ud, Math,Common } from "../node_modules/@prb/math/src/UD60x18.sol";
+import { UD60x18 } from "../node_modules/@prb/math/src/UD60x18.sol";
 
 
 contract RecreatePoolImplScript is Script {
@@ -30,7 +29,7 @@ contract RecreatePoolImplScript is Script {
         
         SafSwapV0Pair swapPool = new SafSwapV0Pair(); // 1% swap fee
         SafProxyContract poolProxy = SafProxyContract(proxyAddr);
-        poolProxy.upgradeTo(address(swapPool));
+        poolProxy.upgradeImplTo(address(swapPool));
         vm.stopBroadcast();
 
         console.log("upgraded SafSwapV0Pair deployed at", address(swapPool));

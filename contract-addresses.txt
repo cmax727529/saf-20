@@ -66,6 +66,7 @@ export pkT1=0x8ee2017a70e17baa86d8c3c376436a08424238783327b97972725ea452312398
 export pkT2=0xe12c253fcc358e927e93f381c7752bb075fc56e6274be3a56c99565c3f99135b          
 
 export rpcT=https://sepolia.infura.io/v3/47938b70f41f4e20bbc70d0d42ba89bb
+export rpcT2=https://hoodi.infura.io/v3/47938b70f41f4e20bbc70d0d42ba89bb
 export rpcBase=https://base-mainnet.infura.io/v3/47938b70f41f4e20bbc70d0d42ba89bb
 export rpcMain=https://mainnet.infura.io/v3/47938b70f41f4e20bbc70d0d42ba89bb
 export rpcPolygon=https://polygon-mainnet.infura.io/v3/47938b70f41f4e20bbc70d0d42ba89bb
@@ -138,15 +139,21 @@ deployer = $pkT1
   export pool=0x4f86ce008e0436151a2293026f608ffbaba90ac0
 
 ============= deploy /verify contract with
-forge verify-contract \
-  --chain sepolia \
-  --etherscan-api-key $ETHERSCAN_API_KEY \
-  <DEPLOYED_ADDRESS> \
-  src/MyContract.sol:MyContract
+* $rpcMain: mainnet
+* $rpcT : sepolia
+* rpcBase: base chain
+
+forge script script/SwapPoolProxy.s.sol --rpc-url $rpcT --broadcast --private-key $pkT1
+
+forge script script/VaultProxyDeploy.s.sol --rpc-url $rpcT --broadcast --private-key $pkT1
+
+-- veryify proxy
+forge verify-contract   --chain hoodi   --etherscan-api-key "TS7SAVWYKPTBPRKHJ3DHHSSN18WHX3GZQV"   0x94166B5eEC0ffF692e0638C47f8F6Ffd952DaB7A    src/utils/saf-proxy-contract.sol:SafProxyContract
+
+-- veryify impl
+forge verify-contract   --chain hoodi   --etherscan-api-key "TS7SAVWYKPTBPRKHJ3DHHSSN18WHX3GZQV"   0x556b29f7e487Ac267442b94abC7F344958c885C5    src/vault/SafeVault.sol:SafeVault
 
 
-  forge verify-contract \
-  --chain sepolia \
-  --etherscan-api-key "TS7SAVWYKPTBPRKHJ3DHHSSN18WHX3GZQV" \
-  0x142A26e58d12Edfa3e726f7C00bCEFF8BBe5A741 \
-  src/vault/SafeVault.sol
+
+  ============ final address
+  0xdde9024CfC27a7FA43be2fAFC483355c439286d9

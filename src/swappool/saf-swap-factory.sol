@@ -3,8 +3,8 @@ pragma solidity ^0.8.13;
 
 
 import {SafSwapV0Pair} from "./saf-swapv0pair.sol";
-import {SafProxyContract} from "./saf-proxy-contract.sol";
-import {UD60x18, ud} from "../../node_modules/@prb/math/src/UD60x18.sol";
+import {SafProxyContract} from "../utils/saf-proxy-contract.sol";
+import {ud} from "../../node_modules/@prb/math/src/UD60x18.sol";
 contract SafSwapFactory {
     string public name;
     constructor(string memory _name){
@@ -20,7 +20,7 @@ contract SafSwapFactory {
         require(pairs[_tokenB][_tokenA] == address(0), "Pair already exists");
 
         address v0pair = address(new SafSwapV0Pair());
-        SafProxyContract  proxy= new SafProxyContract(payable(v0pair), msg.sender);
+        SafProxyContract  proxy= new SafProxyContract(payable(v0pair), msg.sender, bytes(""));
         SafSwapV0Pair  swapProxy= SafSwapV0Pair(payable(proxy));
         
         swapProxy.initialize("SwapPool-A2B", "lpA2B", 0, address(_tokenA), address(_tokenB), ud(0));
